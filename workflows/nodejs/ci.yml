@@ -1,0 +1,91 @@
+name: Node.js CI Workflow
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        description: 'Node.js version to use'
+        type: string
+        default: '22'
+        required: false
+      package-manager:
+        description: 'Package manager to use (npm, yarn, pnpm, bun)'
+        type: string
+        default: 'npm'
+        required: false
+      lint-command:
+        description: 'Command to run linting'
+        type: string
+        default: 'lint'
+        required: false
+      test-command:
+        description: 'Command to run tests'
+        type: string
+        default: 'test'
+        required: false
+      build-command:
+        description: 'Command to run build'
+        type: string
+        default: 'build'
+        required: false
+      enable-test:
+        description: 'Enable test step'
+        type: boolean
+        default: true
+        required: false
+      enable-lint:
+        description: 'Enable lint step'
+        type: boolean
+        default: true
+        required: false
+      enable-build:
+        description: 'Enable build step'
+        type: boolean
+        default: true
+        required: false
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🛠️ Checkout code
+        uses: actions/checkout@v3
+
+      - name: 🔧 Setup Node.js ${{ inputs.node-version }}
+        if: inputs.package-manager != 'bun'
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: ${{ inputs.package-manager }}
+      
+      - name: 🔧 Setup Bun
+        if: inputs.package-manager == 'bun'
+        uses: oven-sh/setup-bun@v2
+
+      - name: 📦 Install dependencies (npm)
+        if: inputs.package-manager == 'npm'
+        run: npm ci
+      
+      - name: 📦 Install dependencies (yarn)
+        if: inputs.package-manager == 'yarn'
+        run: yarn install --frozen-lockfile
+      
+      - name: 📦 Install dependencies (pnpm)
+        if: inputs.package-manager == 'pnpm'
+        run: pnpm install --frozen-lockfile
+      
+      - name: 📦 Install dependencies (bun)
+        if: inputs.package-manager == 'bun'
+        run: bun install
+      
+      - name: ✏️ Lint code
+        if: inputs.enable-lint
+        run: ${{ inputs.package-manager }} run ${{ inputs.lint-command }}
+      
+      - name: 🧪 Run tests
+        if: inputs.enable-test
+        run: ${{ inputs.package-manager }} run ${{ inputs.test-command }}
+      
+      - name: 🛠️ Build project
+        if: inputs.enable-build
+        run: ${{ inputs.package-manager }} run ${{ inputs.build-command }}
