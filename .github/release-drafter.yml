@@ -1,3 +1,5 @@
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
 version-resolver:
   major:
     labels:
@@ -9,3 +11,4 @@ version-resolver:
 template: |
   ## Changes
   $CHANGES
+initial-version: '1.0.0'
